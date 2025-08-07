@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Online Rock Paper Scissors</title>
+  <style>
+    body { font-family: Arial; text-align: center; background: #f4f4f4; }
+    h1 { color: #333; }
+    button { padding: 10px 20px; margin: 5px; font-size: 18px; cursor: pointer; }
+    #status { margin-top: 20px; font-size: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Rock Paper Scissors</h1>
+  <p>Enter your name: <input id="playerName" placeholder="Your name"></p>
+  <button onclick="joinGame()">Join Game</button>
+
+  <div id="game" style="display:none;">
+    <h2>Choose:</h2>
+    <button onclick="play('rock')">🪨 Rock</button>
+    <button onclick="play('paper')">📄 Paper</button>
+    <button onclick="play('scissors')">✂️ Scissors</button>
+    <div id="status"></div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    // TODO: replace with your own Firebase config (get from console.firebase.google.com)
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+      projectId: "YOUR_PROJECT",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let playerName = "";
+    let gameRef = db.ref("rps-game");
+
+    function joinGame() {
+      playerName = document.getElementById("playerName").value.trim();
+      if (!playerName) return alert("Enter a name first!");
+      document.getElementById("game").style.display = "block";
+    }
+
+    function play(choice) {
+      gameRef.child(playerName).set(choice);
+    }
+
+    gameRef.on("value", snapshot => {
+      const players = snapshot.val() || {};
+      const keys = Object.keys(players);
+      if (keys.length === 2) {
+        const [p1, p2] = keys;
+        const c1 = players[p1], c2 = players[p2];
+        let result = "";
+        if (c1 === c2) result = "It's a tie!";
+        else if (
+          (c1 === "rock" && c2 === "scissors") ||
+          (c1 === "paper" && c2 === "rock") ||
+          (c1 === "scissors" && c2 === "paper")
+        ) result = `${p1} wins!`;
+        else result = `${p2} wins!`;
+
+        document.getElementById("status").innerText = 
+          `${p1} chose ${c1}, ${p2} chose ${c2} → ${result}`;
+      }
+    });
+  </script>
+</body>
+</html>
